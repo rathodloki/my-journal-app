@@ -10,7 +10,7 @@ const NoteList = ({ notes, onEdit, onDelete, onToggleStar, onView, animatingNote
           alt="No notes" 
           className="w-72 h-72 mb-6"
         />
-        <p className="text-4xl text-gray-400 font-semibold">No journal yet</p>
+        <p className="text-4xl text-gray-400 font-semibold">No Journal</p>
       </div>
     );
   }
