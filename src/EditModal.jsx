@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { processNoteWithGeminiAI } from './services/geminiAIService';
 import { X } from 'lucide-react';
 
@@ -11,7 +11,14 @@ const EditModal = ({ note, onSave, onClose, geminiApiKey }) => {
     setEditedNote(note);
   }, [note]);
 
-  const handleSave = async () => {
+  // Function to extract JSON from markdown-formatted string
+  const extractJSONFromMarkdown = (text) => {
+    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+    const match = text.match(jsonRegex);
+    return match ? match[1] : text;
+  };
+
+  const handleSave = useCallback(async () => {
     if (editedNote.title.trim() === '' && editedNote.content.trim() === '') {
       onClose();
       return;
@@ -30,7 +37,8 @@ const EditModal = ({ note, onSave, onClose, geminiApiKey }) => {
       
       let enhancedContent;
       try {
-        enhancedContent = JSON.parse(enhancedContentText);
+        const extractedJSON = extractJSONFromMarkdown(enhancedContentText);
+        enhancedContent = JSON.parse(extractedJSON);
       } catch (jsonError) {
         console.error('Error parsing Gemini response as JSON:', jsonError);
         enhancedContent = {
@@ -55,6 +63,11 @@ const EditModal = ({ note, onSave, onClose, geminiApiKey }) => {
     } finally {
       setIsProcessing(false);
     }
+  }, [editedNote, geminiApiKey, onClose, onSave]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditedNote(prevNote => ({ ...prevNote, [name]: value }));
   };
 
   return (
@@ -65,24 +78,29 @@ const EditModal = ({ note, onSave, onClose, geminiApiKey }) => {
           <button
             className="text-gray-500 hover:text-gray-700 transition-colors"
             onClick={onClose}
+            aria-label="Close"
           >
             <X size={24} />
           </button>
         </div>
         <input
           type="text"
+          name="title"
           value={editedNote.title}
-          onChange={(e) => setEditedNote({...editedNote, title: e.target.value})}
+          onChange={handleInputChange}
           placeholder="Enter title"
           className="w-full p-2 mb-4 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Note title"
         />
         <textarea
+          name="content"
           value={editedNote.content}
-          onChange={(e) => setEditedNote({...editedNote, content: e.target.value})}
+          onChange={handleInputChange}
           placeholder="Enter content"
           className="w-full p-2 mb-4 border rounded h-40 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Note content"
         ></textarea>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {error && <p className="text-red-500 mb-4" role="alert">{error}</p>}
         <div className="flex justify-end space-x-2">
           <button
             className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"

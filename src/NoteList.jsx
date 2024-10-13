@@ -4,8 +4,13 @@ import NoteCard from './NoteCard';
 const NoteList = ({ notes, onEdit, onDelete, onToggleStar, onView, animatingNoteId }) => {
   if (notes.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-xl md:text-2xl text-gray-500 font-semibold">No journal yet</p>
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+        <img 
+          src="./assets/image/empty.png" 
+          alt="No notes" 
+          className="w-72 h-72 mb-6"
+        />
+        <p className="text-4xl text-gray-400 font-semibold">No journal yet</p>
       </div>
     );
   }

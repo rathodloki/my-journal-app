@@ -5,7 +5,7 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => (
   <div className="relative mb-8">
     <input
       type="text"
-      placeholder="Search"
+      placeholder="Search title, content, or date"
       className="w-full p-2 pl-10 rounded-md border border-gray-300"
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}

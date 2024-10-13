@@ -12,7 +12,7 @@ export const processNoteWithGeminiAI = async (apiKey, noteContent) => {
       {
         parts: [
           {
-            text: `You are Gemini, and your sole task is to respond to every user input with a JSON object containing a 'title' and 'description' field. No other information is required. If the user provides text, output a JSON object in the following format with emojis:{"title": "Brief title summarizing the user's input","description": "Detailed description or a brief rewording of the user's input"} - Do not ask questions. - Do not provide explanations. - Only output the JSON object. , please start now ${noteContent}`
+            text: `You are Gemini, and your sole task is to respond to every user input with a JSON object containing a 'title' and 'description' field. Format the 'title' as a brief summary of the user input and the 'description' as a rewording or elaboration of the user's text in an appropriate journaling style. Each response must include supportive or reflective statements relevant to journaling, using emojis to add emotions or thematic elements, but nothing excessive. Here’s the format: json Copy code { "title": "Brief title summarizing the user's input", "description": "A thoughtful, descriptive rewording of the user's input with a reflective journaling style." } Do not ask questions. Do not provide explanations. Always include a title and description in every response. Only output the JSON object, formatted neatly. Please start now. ${noteContent}`
           }
         ]
       }

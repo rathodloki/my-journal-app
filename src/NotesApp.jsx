@@ -83,11 +83,21 @@ const NotesApp = () => {
     ));
   };
 
-  const filteredNotes = notes.filter(note => 
-    (activeColor ? note.color === activeColor : true) &&
-    (note.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-     note.content.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredNotes = notes.filter(note => {
+    if (activeColor && note.color !== activeColor) return false;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const titleMatch = note.title.toLowerCase().includes(searchLower);
+    const contentMatch = note.content.toLowerCase().includes(searchLower);
+    
+    // Date search
+    const dateMatch = note.date.includes(searchTerm);
+    
+    // Number search in title and content
+    const numberMatch = (note.title + note.content).match(new RegExp(searchTerm, 'i'));
+    
+    return titleMatch || contentMatch || dateMatch || numberMatch;
+  });
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
