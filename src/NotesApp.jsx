@@ -32,7 +32,7 @@ const NotesApp = () => {
 
     const resetInactivityTimer = () => {
       clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => setIsLocked(true), 60000);
+      inactivityTimer = setTimeout(() => setIsLocked(true), 30000);
     };
 
     const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
