@@ -21,6 +21,7 @@ const NotesApp = () => {
   const [geminiApiKey, setGeminiApiKey] = useState('AIzaSyAkkvxzoasArg5bV1z3nA8m_COQhOPgdjY');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('notes', JSON.stringify(notes));
@@ -115,6 +116,7 @@ const NotesApp = () => {
   }, []);
 
   const filteredNotes = notes.filter(note => {
+    if (showFavorites && !note.hasStar) return false;
     if (activeColor && note.color !== activeColor) return false;
     
     const searchLower = searchTerm.toLowerCase();
@@ -141,6 +143,8 @@ const NotesApp = () => {
           setActiveColor={setActiveColor}
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          showFavorites={showFavorites}
+          setShowFavorites={setShowFavorites}
         />
         <main className="flex-1 overflow-auto p-4">
           <SearchBar 

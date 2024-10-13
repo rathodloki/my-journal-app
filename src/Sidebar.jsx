@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Star } from 'lucide-react';
 
 const colorClasses = {
   orange: 'bg-orange-200 hover:bg-orange-300 hover:shadow-orange-300',
@@ -9,23 +9,18 @@ const colorClasses = {
   blue: 'bg-blue-200 hover:bg-blue-300 hover:shadow-blue-300',
 };
 
-const Sidebar = ({ addNote, activeColor, setActiveColor, isOpen, onClose }) => (
+const Sidebar = ({ addNote, activeColor, setActiveColor, isOpen, onClose, showFavorites, setShowFavorites }) => (
   <>
-    {/* Overlay for mobile view */}
     {isOpen && (
       <div className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden" onClick={onClose}></div>
     )}
-    {/* Sidebar */}
-    <aside className={`fixed md:static top-0 left-0 z-50 w-64 md:w-20 bg-white shadow-md flex flex-col items-center py-6 h-full transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-      {/* Close button for mobile view */}
+    <aside className={`fixed md:static top-0 left-0 z-50 w-20 bg-white shadow-md flex flex-col items-center py-6 h-full transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       <div className="md:hidden absolute top-4 right-4">
         <button onClick={onClose}>
-          <X size={24} />
+         
         </button>
       </div>
-      {/* App title */}
-      <h1 className="text-xl font-semibold mb-6 md:writing-vertical-rl md:transform md:rotate-180"></h1>
-      {/* Add note button */}
+      <h1 className="text-xl font-semibold mb-6 writing-vertical-rl transform rotate-180"></h1>
       <button 
         className="bg-black text-white rounded-full p-2 mb-6 transition-all duration-300 hover:scale-110 hover:bg-gray-800" 
         onClick={() => {
@@ -35,8 +30,15 @@ const Sidebar = ({ addNote, activeColor, setActiveColor, isOpen, onClose }) => (
       >
         <Plus size={24} />
       </button>
-      {/* Color selection buttons */}
       <div className="flex flex-col space-y-4">
+        <button
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ease-in-out 
+          ${showFavorites ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-600'} 
+          hover:scale-105 cursor-pointer shadow-sm hover:shadow-md`}
+          onClick={() => setShowFavorites(!showFavorites)}
+        >
+          <Star size={16} />
+        </button>
         {Object.entries(colorClasses).map(([color, className]) => (
           <button
             key={color}
