@@ -128,6 +128,8 @@ const NotesApp = () => {
     return titleMatch || contentMatch || dateMatch || numberMatch;
   });
 
+  
+
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <header className="bg-white shadow-sm p-4 flex justify-between items-center">
