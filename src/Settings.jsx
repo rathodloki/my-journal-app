@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { X, Download, Upload } from 'lucide-react';
 
-const Settings = ({ isOpen, onClose, notes, onImport, geminiApiKey, setGeminiApiKey }) => {
+const Settings = ({ isOpen, onClose, notes, onImport }) => {
   const modalRef = useRef(null);
   const fileInputRef = useRef(null);
 
