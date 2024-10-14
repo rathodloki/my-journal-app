@@ -1,8 +1,25 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X, Download, Upload } from 'lucide-react';
 
-const Settings = ({ isOpen, onClose, notes, onImport }) => {
+const Settings = ({ isOpen, onClose, notes, onImport, geminiApiKey, setGeminiApiKey }) => {
+  const modalRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -12,7 +29,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     const href = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = href;
-    link.download = 'my_journals.json';
+    link.download = 'docket_notes_export.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -42,7 +59,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg w-full max-w-md relative overflow-hidden">
+      <div ref={modalRef} className="bg-white rounded-lg w-full max-w-md relative overflow-hidden">
         <div className="p-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Settings</h2>
           <button 
@@ -54,7 +71,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
         </div>
         <div className="px-4 py-2 space-y-2">
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700">Export</span>
+            <span className="text-gray-700">Export All Notecards</span>
             <button
               onClick={handleExport}
               className="text-blue-500 hover:text-blue-600 transition-colors focus:outline-none"
@@ -63,7 +80,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
             </button>
           </div>
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700">Import</span>
+            <span className="text-gray-700">Import Notecards</span>
             <button
               onClick={handleImportClick}
               className="text-green-500 hover:text-green-600 transition-colors focus:outline-none"

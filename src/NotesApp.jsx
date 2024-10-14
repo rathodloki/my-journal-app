@@ -23,6 +23,7 @@ const NotesApp = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState('AIzaSyAkkvxzoasArg5bV1z3nA8m_COQhOPgdjY');
 
   useEffect(() => {
     localStorage.setItem('notes', JSON.stringify(notes));
@@ -189,6 +190,7 @@ const NotesApp = () => {
           note={editingNote} 
           onSave={saveNote} 
           onClose={() => setEditingNote(null)} 
+          geminiApiKey={geminiApiKey}
         />
       )}
       {viewingNote && (
