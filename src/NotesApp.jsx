@@ -5,6 +5,7 @@ import NoteList from './NoteList';
 import EditModal from './EditModal';
 import NoteView from './NoteView';
 import LockScreen from './LockScreen';
+import Settings from './Settings';
 import { Menu, Plus } from 'lucide-react';
 
 const NotesApp = () => {
@@ -18,10 +19,10 @@ const NotesApp = () => {
   const [editingNote, setEditingNote] = useState(null);
   const [viewingNote, setViewingNote] = useState(null);
   const [animatingNoteId, setAnimatingNoteId] = useState(null);
-  const [geminiApiKey, setGeminiApiKey] = useState('AIzaSyAkkvxzoasArg5bV1z3nA8m_COQhOPgdjY');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('notes', JSON.stringify(notes));
@@ -115,6 +116,21 @@ const NotesApp = () => {
     ));
   }, []);
 
+  const handleImport = useCallback((importedNotes) => {
+    setNotes(prevNotes => {
+      const newNotes = [...prevNotes, ...importedNotes];
+      // Remove duplicates based on id
+      return newNotes.filter((note, index, self) =>
+        index === self.findIndex((t) => t.id === note.id)
+      );
+    });
+  }, []);
+
+  const handleOpenSettings = useCallback(() => {
+    setIsSettingsOpen(true);
+    setIsSidebarOpen(false);
+  }, []);
+
   const filteredNotes = notes.filter(note => {
     if (showFavorites && !note.hasStar) return false;
     if (activeColor && note.color !== activeColor) return false;
@@ -127,8 +143,6 @@ const NotesApp = () => {
     
     return titleMatch || contentMatch || dateMatch || numberMatch;
   });
-
-  
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -147,6 +161,7 @@ const NotesApp = () => {
           onClose={() => setIsSidebarOpen(false)}
           showFavorites={showFavorites}
           setShowFavorites={setShowFavorites}
+          onOpenSettings={handleOpenSettings}
         />
         <main className="flex-1 overflow-auto p-4">
           <SearchBar 
@@ -174,7 +189,6 @@ const NotesApp = () => {
           note={editingNote} 
           onSave={saveNote} 
           onClose={() => setEditingNote(null)} 
-          geminiApiKey={geminiApiKey}
         />
       )}
       {viewingNote && (
@@ -183,6 +197,12 @@ const NotesApp = () => {
           onClose={() => setViewingNote(null)}
         />
       )}
+      <Settings 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        notes={notes}
+        onImport={handleImport}
+      />
       {isLocked && <LockScreen onUnlock={handleUnlock} />}
     </div>
   );
