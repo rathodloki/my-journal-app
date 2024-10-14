@@ -1,19 +1,30 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { X, Download, Upload, Mail } from 'lucide-react';
+import { X, Download, Upload, Clipboard, File } from 'lucide-react';
+
+const Toast = ({ message, onDismiss }) => {
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 3000);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  return (
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-sm px-4 py-2 rounded-md shadow-lg transition-opacity duration-300 ease-in-out">
+      {message}
+    </div>
+  );
+};
 
 const Settings = ({ isOpen, onClose, notes, onImport }) => {
-  const settingsModalRef = useRef(null);
-  const emailModalRef = useRef(null);
+  const modalRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [email, setEmail] = useState('');
+  const [copyStatus, setCopyStatus] = useState('');
+  const [showImportOptions, setShowImportOptions] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (settingsModalRef.current && !settingsModalRef.current.contains(event.target)) {
-        if (!showEmailModal) {
-          onClose();
-        }
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        onClose();
       }
     };
 
@@ -24,23 +35,11 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose, showEmailModal]);
+  }, [isOpen, onClose]);
 
-  useEffect(() => {
-    const handleEmailModalClickOutside = (event) => {
-      if (emailModalRef.current && !emailModalRef.current.contains(event.target)) {
-        setShowEmailModal(false);
-      }
-    };
-
-    if (showEmailModal) {
-      document.addEventListener('mousedown', handleEmailModalClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleEmailModalClickOutside);
-    };
-  }, [showEmailModal]);
+  const showNotification = (message) => {
+    setToast({ id: Date.now(), message });
+  };
 
   if (!isOpen) return null;
 
@@ -55,9 +54,14 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(href);
+    showNotification('Notes exported successfully!');
   };
 
   const handleImportClick = () => {
+    setShowImportOptions(true);
+  };
+
+  const handleFileUpload = () => {
     fileInputRef.current.click();
   };
 
@@ -69,27 +73,49 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
         try {
           const importedNotes = JSON.parse(e.target.result);
           onImport(importedNotes);
+          showNotification('Notes imported successfully!');
         } catch (error) {
           console.error('Error parsing imported file:', error);
-          alert('Invalid file format. Please select a valid JSON file.');
+          showNotification('Invalid file format. Please select a valid JSON file.');
         }
       };
       reader.readAsText(file);
     }
   };
 
-  const handleEmailExport = (e) => {
-    e.preventDefault();
+  const handlePasteFromClipboard = async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (!clipboardText) {
+        showNotification('Clipboard is empty');
+        return;
+      }
+      const importedNotes = JSON.parse(clipboardText);
+      onImport(importedNotes);
+      showNotification('Pasted');
+    } catch (error) {
+      console.error('Error parsing clipboard content:', error);
+      showNotification('Invalid data format in clipboard. Please copy a valid JSON.');
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
     const notesJson = JSON.stringify(notes, null, 2);
-    const emailBody = encodeURIComponent(`Here are your exported notes:\n\n${notesJson}`);
-    window.location.href = `mailto:${email}?subject=Exported%20Notes&body=${emailBody}`;
-    setShowEmailModal(false);
-    setEmail('');
+    try {
+      await navigator.clipboard.writeText(notesJson);
+      setCopyStatus('Copied!');
+      setTimeout(() => setCopyStatus(''), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      setCopyStatus('Failed to copy');
+      showNotification('Failed to copy notes to clipboard');
+      setTimeout(() => setCopyStatus(''), 2000);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div ref={settingsModalRef} className="bg-white rounded-lg w-full max-w-md relative overflow-hidden">
+      <div ref={modalRef} className="bg-white rounded-lg w-full max-w-md relative overflow-hidden">
         <div className="p-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Settings</h2>
           <button 
@@ -118,13 +144,34 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
               <Upload size={20} />
             </button>
           </div>
+          {showImportOptions && (
+            <div className="flex justify-end space-x-2 mt-2">
+              <button
+                onClick={handlePasteFromClipboard}
+                className="text-purple-500 hover:text-purple-600 transition-colors focus:outline-none"
+              >
+                <Clipboard size={20} />
+              </button>
+              <button
+                onClick={handleFileUpload}
+                className="text-orange-500 hover:text-orange-600 transition-colors focus:outline-none"
+              >
+                <File size={20} />
+              </button>
+            </div>
+          )}
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700">Export to Email</span>
+            <span className="text-gray-700">Copy All to Clipboard</span>
             <button
-              onClick={() => setShowEmailModal(true)}
-              className="text-purple-500 hover:text-purple-600 transition-colors focus:outline-none"
+              onClick={handleCopyToClipboard}
+              className="text-purple-500 hover:text-purple-600 transition-colors focus:outline-none relative"
             >
-              <Mail size={20} />
+              <Clipboard size={20} />
+              {copyStatus && (
+                <span className="absolute -top-8 -left-10 bg-gray-800 text-white text-xs py-1 px-2 rounded">
+                  {copyStatus}
+                </span>
+              )}
             </button>
           </div>
           <input 
@@ -136,37 +183,12 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
           />
         </div>
       </div>
-      {showEmailModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div ref={emailModalRef} className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Export to Email</h3>
-            <form onSubmit={handleEmailExport}>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full p-2 mb-4 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-              <div className="flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(false)}
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Send
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {toast && (
+        <Toast 
+          key={toast.id}
+          message={toast.message} 
+          onDismiss={() => setToast(null)} 
+        />
       )}
     </div>
   );
