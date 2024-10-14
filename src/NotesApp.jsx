@@ -6,7 +6,7 @@ import EditModal from './EditModal';
 import NoteView from './NoteView';
 import LockScreen from './LockScreen';
 import Settings from './Settings';
-import { Menu, Plus } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 const NotesApp = () => {
   const [notes, setNotes] = useState(() => {
@@ -179,11 +179,33 @@ const NotesApp = () => {
           />
         </main>
       </div>
+      <style>
+        {`
+          @keyframes floatButton {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+        `}
+      </style>
       <button
-        className="fixed bottom-6 right-6 bg-black text-white rounded-full p-4 shadow-lg"
+        style={{
+          position: 'fixed',
+          bottom: '1.5rem',
+          right: '1.5rem',
+          width: '3rem',
+          height: '3rem',
+          borderRadius: '9999px',
+          backgroundImage: 'url("./assets/image/button+.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          boxShadow: '0 10px 20px -5px rgba(0, 0, 0, 0.3), 0 6px 10px -3px rgba(0, 0, 0, 0.2)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          animation: 'floatButton 3s infinite cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
         onClick={addNote}
       >
-        <Plus size={24} />
       </button>
       {editingNote && (
         <EditModal 

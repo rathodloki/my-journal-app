@@ -70,7 +70,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     try {
       await navigator.clipboard.writeText(notesJson);
       setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 1000);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
       setPasteError('Failed to copy to clipboard. Please try again.');
@@ -102,7 +102,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
         setPasteSuccess(false);
         setShowPasteModal(false);
         setPasteContent('');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       console.error('Error parsing pasted content:', error);
       setPasteError('Invalid JSON format.');
