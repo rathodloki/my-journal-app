@@ -29,7 +29,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     const href = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = href;
-    link.download = 'docket_notes_export.json';
+    link.download = 'my_journals.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
