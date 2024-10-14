@@ -20,7 +20,7 @@ const Sidebar = ({ addNote, activeColor, setActiveColor, isOpen, onClose, showFa
           <X size={24} />
         </button>
       </div>
-      <h1 className="text-xl font-semibold mb-6 writing-vertical-rl transform rotate-180">Docket</h1>
+      <h1 className="text-xl font-semibold mb-6 writing-vertical-rl transform rotate-180"></h1>
       <button 
         className="bg-black text-white rounded-full p-2 mb-6 transition-all duration-300 hover:scale-110 hover:bg-gray-800" 
         onClick={() => {
