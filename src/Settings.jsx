@@ -1,29 +1,21 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { X, Download, Upload, Clipboard, File } from 'lucide-react';
-
-const Toast = ({ message, onDismiss }) => {
-  useEffect(() => {
-    const timer = setTimeout(onDismiss, 3000);
-    return () => clearTimeout(timer);
-  }, [onDismiss]);
-
-  return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white text-sm px-4 py-2 rounded-md shadow-lg transition-opacity duration-300 ease-in-out">
-      {message}
-    </div>
-  );
-};
+import { X, Download, Upload, Clipboard, ClipboardPaste } from 'lucide-react';
 
 const Settings = ({ isOpen, onClose, notes, onImport }) => {
   const modalRef = useRef(null);
+  const pasteModalRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [copyStatus, setCopyStatus] = useState('');
-  const [showImportOptions, setShowImportOptions] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [pasteSuccess, setPasteSuccess] = useState(false);
+  const [showPasteModal, setShowPasteModal] = useState(false);
+  const [pasteContent, setPasteContent] = useState('');
+  const [isPasting, setIsPasting] = useState(false);
+  const [pasteError, setPasteError] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
+      if (modalRef.current && !modalRef.current.contains(event.target) &&
+          (!pasteModalRef.current || !pasteModalRef.current.contains(event.target))) {
         onClose();
       }
     };
@@ -36,10 +28,6 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, onClose]);
-
-  const showNotification = (message) => {
-    setToast({ id: Date.now(), message });
-  };
 
   if (!isOpen) return null;
 
@@ -54,14 +42,9 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(href);
-    showNotification('Notes exported successfully!');
   };
 
   const handleImportClick = () => {
-    setShowImportOptions(true);
-  };
-
-  const handleFileUpload = () => {
     fileInputRef.current.click();
   };
 
@@ -73,29 +56,12 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
         try {
           const importedNotes = JSON.parse(e.target.result);
           onImport(importedNotes);
-          showNotification('Notes imported successfully!');
         } catch (error) {
           console.error('Error parsing imported file:', error);
-          showNotification('Invalid file format. Please select a valid JSON file.');
+          setPasteError('Invalid file format. Please select a valid JSON file.');
         }
       };
       reader.readAsText(file);
-    }
-  };
-
-  const handlePasteFromClipboard = async () => {
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      if (!clipboardText) {
-        showNotification('Clipboard is empty');
-        return;
-      }
-      const importedNotes = JSON.parse(clipboardText);
-      onImport(importedNotes);
-      showNotification('Pasted');
-    } catch (error) {
-      console.error('Error parsing clipboard content:', error);
-      showNotification('Invalid data format in clipboard. Please copy a valid JSON.');
     }
   };
 
@@ -103,13 +69,53 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
     const notesJson = JSON.stringify(notes, null, 2);
     try {
       await navigator.clipboard.writeText(notesJson);
-      setCopyStatus('Copied!');
-      setTimeout(() => setCopyStatus(''), 2000);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 1000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
-      setCopyStatus('Failed to copy');
-      showNotification('Failed to copy notes to clipboard');
-      setTimeout(() => setCopyStatus(''), 2000);
+      setPasteError('Failed to copy to clipboard. Please try again.');
+    }
+  };
+
+  const handlePasteClick = (e) => {
+    e.stopPropagation();
+    setShowPasteModal(true);
+    setPasteError('');
+  };
+
+  const handlePasteContentChange = (e) => {
+    setPasteContent(e.target.value);
+    setPasteError('');
+  };
+
+  const handlePasteSubmit = async (e) => {
+    e.stopPropagation();
+    setIsPasting(true);
+    setPasteError('');
+    try {
+      const importedNotes = JSON.parse(pasteContent);
+      // Introduce a slight delay to ensure the UI updates
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await onImport(importedNotes);
+      setPasteSuccess(true);
+      setTimeout(() => {
+        setPasteSuccess(false);
+        setShowPasteModal(false);
+        setPasteContent('');
+      }, 2000);
+    } catch (error) {
+      console.error('Error parsing pasted content:', error);
+      setPasteError('Invalid JSON format.');
+    } finally {
+      setIsPasting(false);
+    }
+  };
+
+  const handlePasteModalClose = (e) => {
+    e.stopPropagation();
+    if (!isPasting) {
+      setShowPasteModal(false);
+      setPasteError('');
     }
   };
 
@@ -127,7 +133,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
         </div>
         <div className="px-4 py-2 space-y-2">
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700">Export All Notecards</span>
+            <span className="text-gray-700">Export</span>
             <button
               onClick={handleExport}
               className="text-blue-500 hover:text-blue-600 transition-colors focus:outline-none"
@@ -136,7 +142,7 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
             </button>
           </div>
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700">Import Notecards</span>
+            <span className="text-gray-700">Import</span>
             <button
               onClick={handleImportClick}
               className="text-green-500 hover:text-green-600 transition-colors focus:outline-none"
@@ -144,36 +150,30 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
               <Upload size={20} />
             </button>
           </div>
-          {showImportOptions && (
-            <div className="flex justify-end space-x-2 mt-2">
-              <button
-                onClick={handlePasteFromClipboard}
-                className="text-purple-500 hover:text-purple-600 transition-colors focus:outline-none"
-              >
-                <Clipboard size={20} />
-              </button>
-              <button
-                onClick={handleFileUpload}
-                className="text-orange-500 hover:text-orange-600 transition-colors focus:outline-none"
-              >
-                <File size={20} />
-              </button>
-            </div>
-          )}
           <div className="flex justify-between items-center py-2">
-            <span className="text-gray-700">Copy All to Clipboard</span>
+            <span className="text-gray-700">Copy to Clipboard</span>
             <button
               onClick={handleCopyToClipboard}
-              className="text-purple-500 hover:text-purple-600 transition-colors focus:outline-none relative"
+              className="text-purple-500 hover:text-purple-600 transition-colors focus:outline-none"
             >
               <Clipboard size={20} />
-              {copyStatus && (
-                <span className="absolute -top-8 -left-10 bg-gray-800 text-white text-xs py-1 px-2 rounded">
-                  {copyStatus}
-                </span>
-              )}
             </button>
           </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-gray-700">Paste</span>
+            <button
+              onClick={handlePasteClick}
+              className="text-orange-500 hover:text-orange-600 transition-colors focus:outline-none"
+            >
+              <ClipboardPaste size={20} />
+            </button>
+          </div>
+          {copySuccess && (
+            <p className="text-green-500 text-sm">Successfully copied to clipboard!</p>
+          )}
+          {pasteSuccess && (
+            <p className="text-green-500 text-sm">Successfully imported pasted content!</p>
+          )}
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -183,12 +183,45 @@ const Settings = ({ isOpen, onClose, notes, onImport }) => {
           />
         </div>
       </div>
-      {toast && (
-        <Toast 
-          key={toast.id}
-          message={toast.message} 
-          onDismiss={() => setToast(null)} 
-        />
+      {showPasteModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={handlePasteModalClose}
+        >
+          <div 
+            ref={pasteModalRef}
+            className="bg-white rounded-lg w-full max-w-md p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-2">Paste JSON Content</h3>
+            <textarea
+              className="w-full h-40 p-2 border rounded mb-2"
+              value={pasteContent}
+              onChange={handlePasteContentChange}
+              placeholder="Paste your JSON content here..."
+              disabled={isPasting}
+            />
+            {pasteError && (
+              <p className="text-red-500 text-sm mb-2">{pasteError}</p>
+            )}
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
+                onClick={handlePasteModalClose}
+                disabled={isPasting}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-50"
+                onClick={handlePasteSubmit}
+                disabled={isPasting}
+              >
+                {isPasting ? 'Pasting...' : 'Import'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
